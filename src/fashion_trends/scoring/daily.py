@@ -18,8 +18,12 @@ def score_day(
     if source not in source_filters:
         raise ValueError(f"Unsupported report source: {source}")
     if min_mentions is None:
-        min_mentions = 2 if source == "rss" else 1
-    if min_mentions < 1:
+        phrase_min_mentions = 2 if source == "rss" else 1
+        single_word_min_mentions = 4 if source == "rss" else 1
+    else:
+        phrase_min_mentions = min_mentions
+        single_word_min_mentions = min_mentions
+    if min(phrase_min_mentions, single_word_min_mentions) < 1:
         raise ValueError("min_mentions must be at least 1")
 
     rows = connection.execute(
@@ -32,10 +36,16 @@ def score_day(
            FROM observations o JOIN concepts c USING (concept_key)
            WHERE o.observed_on = ? AND {source_filters[source]}
            GROUP BY c.concept_key, c.canonical_label
-           HAVING COUNT(DISTINCT o.source || ':' || o.source_item_id) >= ?
+           HAVING (
+               (instr(c.concept_key, ' ') = 0 AND
+                COUNT(DISTINCT o.source || ':' || o.source_item_id) >= ?)
+               OR
+               (instr(c.concept_key, ' ') > 0 AND
+                COUNT(DISTINCT o.source || ':' || o.source_item_id) >= ?)
+           )
            ORDER BY (COUNT(DISTINCT o.source) * 3 + COUNT(*) + AVG(o.confidence)) DESC,
                     c.canonical_label""",
-        (observed_on.isoformat(), min_mentions),
+        (observed_on.isoformat(), single_word_min_mentions, phrase_min_mentions),
     ).fetchall()
     results = []
     for row in rows:

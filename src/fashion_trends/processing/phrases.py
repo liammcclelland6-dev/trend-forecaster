@@ -24,6 +24,7 @@ _STOPWORDS = {
     "outfit", "outfits", "season", "seasons", "style", "styles", "trend", "trends", "wear",
     "wearing", "way", "ways", "everything", "essential", "essentials", "must", "need", "needs",
     "know", "everyone", "people", "proof", "copy", "guide", "launch", "today", "why",
+    "consider", "one", "work", "everything", "incredible", "moments", "became", "takes",
 }
 _MAX_PHRASES_PER_ARTICLE = 80
 
