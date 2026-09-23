@@ -64,7 +64,7 @@ fashion-trends report --source rss
 
 The adapter keeps each article's cleaned headline, summary/description, publication timestamp, URL, and feed name. RSS collection extracts candidate one-to-three-word phrases from headlines and summaries and records them against the original article as evidence. Reports group identical phrases across distinct articles and feeds. By default, multiword phrases must appear in two articles, while single words must appear in four; use `--min-mentions 1` to inspect one-off candidates. This stage finds repeated wording; semantic clustering to connect related but different phrases is a later replaceable step. If a feed is unavailable or malformed, the collector prints a warning and continues with the remaining feeds. To use another feed list, pass `--feeds path\to\feeds.toml` to the RSS collect command. The synthetic source remains available with `fashion-trends collect --source sample`.
 
-Use `fashion-trends report --source sample` to view synthetic observations or `fashion-trends report --source all` to combine sample and RSS data. RSS dates come from article publication dates, so pass `--date YYYY-MM-DD` to report a specific day.
+Use `fashion-trends report --source sample` to view synthetic observations or `fashion-trends report --source all` to combine sample and RSS data. RSS dates come from article publication dates. Reports compare a recent window with the preceding window; set `--window-days 1` for a daily comparison or `--date YYYY-MM-DD` to choose the final date. Historical change becomes meaningful after collections have populated both windows.
 
 Without installing the command, run `python -m fashion_trends.cli ...` with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "src"`).
 

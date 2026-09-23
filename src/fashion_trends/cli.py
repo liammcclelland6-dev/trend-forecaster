@@ -8,7 +8,7 @@ from fashion_trends.models import NormalizedSignal
 from fashion_trends.processing.normalize import normalize
 from fashion_trends.processing.phrases import extract_phrases
 from fashion_trends.reporting.markdown import render_daily
-from fashion_trends.scoring.daily import score_day
+from fashion_trends.scoring.daily import score_window
 from fashion_trends.sources.rss import RSSSource
 from fashion_trends.sources.sample import SampleSource
 
@@ -32,9 +32,10 @@ def main() -> None:
     add_db_option(report)
     report.add_argument("--date", type=date.fromisoformat, default=date.today())
     report.add_argument("--source", choices=["rss", "sample", "all"], default="rss")
+    report.add_argument("--window-days", type=int, default=7)
     report.add_argument(
         "--min-mentions", type=int,
-        help="Minimum distinct articles per phrase (defaults to 2 for RSS, 1 otherwise)",
+        help="Minimum distinct articles per phrase (RSS defaults: 2 for phrases, 4 for single words)",
     )
     args = parser.parse_args()
     db_path = args.db_after or args.db_before or "data/fashion_trends.sqlite3"
@@ -58,7 +59,14 @@ def main() -> None:
         elif args.command == "report":
             print(render_daily(
                 args.date,
-                score_day(connection, args.date, args.source, args.min_mentions),
+                score_window(
+                    connection,
+                    args.date,
+                    args.window_days,
+                    args.source,
+                    args.min_mentions,
+                ),
+                args.window_days,
             ))
 
 
