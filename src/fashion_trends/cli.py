@@ -7,6 +7,7 @@ from fashion_trends.database.repository import connect, save_observations
 from fashion_trends.processing.normalize import normalize
 from fashion_trends.reporting.markdown import render_daily
 from fashion_trends.scoring.daily import score_day
+from fashion_trends.sources.rss import RSSSource
 from fashion_trends.sources.sample import SampleSource
 
 
@@ -22,7 +23,8 @@ def main() -> None:
     add_db_option(init)
     collect = subparsers.add_parser("collect", help="Collect signals from a source")
     add_db_option(collect)
-    collect.add_argument("--source", choices=["sample"], default="sample")
+    collect.add_argument("--source", choices=["sample", "rss"], default="sample")
+    collect.add_argument("--feeds", default="feeds.toml", help="TOML feed list for --source rss")
     collect.add_argument("--date", type=date.fromisoformat, default=date.today())
     report = subparsers.add_parser("report", help="Print a daily Markdown report")
     add_db_option(report)
@@ -34,7 +36,7 @@ def main() -> None:
         if args.command == "init":
             print(f"Initialized database at {db_path}")
         elif args.command == "collect":
-            source = SampleSource()
+            source = RSSSource(args.feeds) if args.source == "rss" else SampleSource()
             signals = source.fetch(args.date)
             normalized = [item for signal in signals for item in normalize(signal)]
             count = save_observations(connection, normalized)
