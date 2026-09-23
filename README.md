@@ -62,7 +62,7 @@ fashion-trends collect --source rss
 fashion-trends report
 ```
 
-Each item stores its title and summary/description as the observation text, its link as the URL, and its publication date as the observation date. The title, summary, and original publication timestamp are also retained in observation metadata. If a feed is unavailable or malformed, the collector prints a warning and continues with the remaining feeds. To use another feed list, pass `--feeds path\to\feeds.toml` to the RSS collect command. The synthetic source remains available with `fashion-trends collect --source sample`.
+Each item's HTML is cleaned before storage. The headline is used as observation text for normalization; the summary/description, headline, and original publication timestamp are retained in observation metadata. The item link is stored as its URL, and its publication date is used as the observation date. Fallback concept labels omit common editorial wording and are shortened to keep report rows readable. If a feed is unavailable or malformed, the collector prints a warning and continues with the remaining feeds. To use another feed list, pass `--feeds path\to\feeds.toml` to the RSS collect command. The synthetic source remains available with `fashion-trends collect --source sample`.
 
 Without installing the command, run `python -m fashion_trends.cli ...` with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "src"`).
 

@@ -12,6 +12,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timezone
 from email.utils import parsedate_to_datetime
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -19,6 +20,33 @@ from fashion_trends.models import Signal
 
 _TIMEOUT_SECONDS = 15
 _USER_AGENT = "fashion-trend-bot/0.1 (+RSS reader)"
+_BLOCK_TAGS = {"br", "div", "li", "p", "tr"}
+
+
+class _TextExtractor(HTMLParser):
+    """Turn the HTML fragments commonly embedded in RSS fields into plain text."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.casefold() in _BLOCK_TAGS:
+            self.parts.append(" ")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.casefold() in _BLOCK_TAGS:
+            self.parts.append(" ")
+
+    def handle_data(self, data: str) -> None:
+        self.parts.append(data)
+
+
+def _plain_text(value: str) -> str:
+    parser = _TextExtractor()
+    parser.feed(value)
+    parser.close()
+    return re.sub(r"\s+", " ", " ".join(parser.parts)).strip()
 
 
 def _local_name(tag: str) -> str:
@@ -32,7 +60,7 @@ def _child_text(element: ET.Element, *names: str) -> str:
             continue
         if _local_name(child.tag) == "link" and child.attrib.get("href"):
             return child.attrib["href"].strip()
-        value = " ".join(part.strip() for part in child.itertext() if part.strip())
+        value = _plain_text(" ".join(child.itertext()))
         if value:
             return value
     return ""
@@ -98,7 +126,8 @@ class RSSSource:
             link = _child_text(entry, "link")
             published = _child_text(entry, "pubdate", "published", "updated", "date")
             observed_on = _publication_date(published, fallback_date)
-            text = "\n".join(part for part in (title, summary) if part).strip()
+            # Keep the full summary in metadata, but normalize the shorter headline.
+            text = title or summary
             if not text:
                 continue
             identity = link or f"{title}|{published}"
