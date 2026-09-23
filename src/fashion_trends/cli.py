@@ -12,19 +12,27 @@ from fashion_trends.sources.sample import SampleSource
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="fashion-trends")
-    parser.add_argument("--db", default="data/fashion_trends.sqlite3", help="SQLite database path")
+    parser.add_argument("--db", dest="db_before", help="SQLite database path")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser("init", help="Create the database schema")
+
+    def add_db_option(command_parser: argparse.ArgumentParser) -> None:
+        command_parser.add_argument("--db", dest="db_after", help="SQLite database path")
+
+    init = subparsers.add_parser("init", help="Create the database schema")
+    add_db_option(init)
     collect = subparsers.add_parser("collect", help="Collect signals from a source")
+    add_db_option(collect)
     collect.add_argument("--source", choices=["sample"], default="sample")
     collect.add_argument("--date", type=date.fromisoformat, default=date.today())
     report = subparsers.add_parser("report", help="Print a daily Markdown report")
+    add_db_option(report)
     report.add_argument("--date", type=date.fromisoformat, default=date.today())
     args = parser.parse_args()
+    db_path = args.db_after or args.db_before or "data/fashion_trends.sqlite3"
 
-    with connect(args.db) as connection:
+    with connect(db_path) as connection:
         if args.command == "init":
-            print(f"Initialized database at {args.db}")
+            print(f"Initialized database at {db_path}")
         elif args.command == "collect":
             source = SampleSource()
             signals = source.fetch(args.date)

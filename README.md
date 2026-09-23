@@ -43,7 +43,7 @@ fashion-trends report
 
 Without installing the command, run `python -m fashion_trends.cli ...` with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "src"`).
 
-By default, the database is `data/fashion_trends.sqlite3`. Pass `--db path\to\file.sqlite3` to any command to use a different location. Collection is idempotent for a given source, source item, concept, and observation date, so rerunning a source does not duplicate its observations.
+By default, the database is `data/fashion_trends.sqlite3`. Pass `--db path\to\file.sqlite3` before or after any command to use a different location (for example, `fashion-trends --db custom.sqlite3 report` or `fashion-trends report --db custom.sqlite3`). Collection is idempotent for a given source, source item, concept, and observation date, so rerunning a source does not duplicate its observations.
 
 ## MVP scoring
 
