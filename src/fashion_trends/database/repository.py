@@ -40,21 +40,49 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
 
 
 def save_observations(connection: sqlite3.Connection, items: list[NormalizedSignal]) -> int:
-    before = connection.total_changes
+    grouped: dict[tuple[str, str, str], list[NormalizedSignal]] = {}
+    for item in items:
+        signal = item.signal
+        identity = (signal.source, signal.source_item_id, signal.observed_on.isoformat())
+        grouped.setdefault(identity, []).append(item)
+
+    inserted_observations = 0
     with connection:
-        for item in items:
-            signal = item.signal
+        for (source, source_item_id, observed_on), normalized_items in grouped.items():
+            concept_keys = sorted({item.concept_key for item in normalized_items})
+            placeholders = ", ".join("?" for _ in concept_keys)
             connection.execute(
-                "INSERT INTO concepts(concept_key, canonical_label) VALUES (?, ?) "
-                "ON CONFLICT(concept_key) DO UPDATE SET canonical_label=excluded.canonical_label",
-                (item.concept_key, item.canonical_label),
+                f"DELETE FROM observations WHERE source = ? AND source_item_id = ? "
+                f"AND observed_on = ? AND concept_key NOT IN ({placeholders})",
+                (source, source_item_id, observed_on, *concept_keys),
             )
-            connection.execute(
-                """INSERT OR IGNORE INTO observations
-                (source, source_item_id, concept_key, observed_on, raw_text, url, confidence, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (signal.source, signal.source_item_id, item.concept_key,
-                 signal.observed_on.isoformat(), signal.text, signal.url,
-                 signal.confidence, signal.metadata),
-            )
-    return connection.total_changes - before
+
+            for item in normalized_items:
+                signal = item.signal
+                observation_date = signal.observed_on.isoformat()
+                connection.execute(
+                    "INSERT INTO concepts(concept_key, canonical_label) VALUES (?, ?) "
+                    "ON CONFLICT(concept_key) DO UPDATE SET canonical_label=excluded.canonical_label",
+                    (item.concept_key, item.canonical_label),
+                )
+                exists = connection.execute(
+                    "SELECT 1 FROM observations WHERE source = ? AND source_item_id = ? "
+                    "AND concept_key = ? AND observed_on = ?",
+                    (signal.source, signal.source_item_id, item.concept_key, observation_date),
+                ).fetchone()
+                cursor = connection.execute(
+                    """INSERT INTO observations
+                    (source, source_item_id, concept_key, observed_on, raw_text, url, confidence, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(source, source_item_id, concept_key, observed_on) DO UPDATE SET
+                        raw_text=excluded.raw_text,
+                        url=excluded.url,
+                        confidence=excluded.confidence,
+                        metadata=excluded.metadata""",
+                    (signal.source, signal.source_item_id, item.concept_key,
+                     observation_date, signal.text, signal.url,
+                     signal.confidence, signal.metadata),
+                )
+                if not exists:
+                    inserted_observations += cursor.rowcount
+    return inserted_observations
