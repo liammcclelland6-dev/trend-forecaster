@@ -9,7 +9,7 @@ Sources (sample or configurable RSS feeds)
             ↓
     Signal records
             ↓
- Normalize phrases → canonical concepts
+ Extract phrase mentions → source evidence
             ↓
      SQLite observations
             ↓
@@ -38,7 +38,7 @@ python -m venv .venv
 python -m pip install -e .
 fashion-trends init
 fashion-trends collect --source sample
-fashion-trends report
+fashion-trends report --source sample
 ```
 
 ## Collect RSS feeds
@@ -59,10 +59,12 @@ Collect RSS items, then generate the report:
 
 ```powershell
 fashion-trends collect --source rss
-fashion-trends report
+fashion-trends report --source rss
 ```
 
-Each item's HTML is cleaned before storage. The headline is used as observation text for normalization; the summary/description, headline, and original publication timestamp are retained in observation metadata. The item link is stored as its URL, and its publication date is used as the observation date. Fallback concept labels omit common editorial wording and are shortened to keep report rows readable. If a feed is unavailable or malformed, the collector prints a warning and continues with the remaining feeds. To use another feed list, pass `--feeds path\to\feeds.toml` to the RSS collect command. The synthetic source remains available with `fashion-trends collect --source sample`.
+The adapter keeps each article's cleaned headline, summary/description, publication timestamp, URL, and feed name. RSS collection extracts candidate one-to-three-word phrases from headlines and summaries and records them against the original article as evidence. Reports group identical phrases across distinct articles and feeds; the default RSS report requires a phrase to appear in at least two articles. Use `--min-mentions 1` to inspect single-article candidates. This stage finds repeated wording; semantic clustering to connect related but different phrases is a later replaceable step. If a feed is unavailable or malformed, the collector prints a warning and continues with the remaining feeds. To use another feed list, pass `--feeds path\to\feeds.toml` to the RSS collect command. The synthetic source remains available with `fashion-trends collect --source sample`.
+
+Use `fashion-trends report --source sample` to view synthetic observations or `fashion-trends report --source all` to combine sample and RSS data. RSS dates come from article publication dates, so pass `--date YYYY-MM-DD` to report a specific day.
 
 Without installing the command, run `python -m fashion_trends.cli ...` with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "src"`).
 
@@ -70,7 +72,7 @@ By default, the database is `data/fashion_trends.sqlite3`. Pass `--db path\to\fi
 
 ## MVP scoring
 
-The score is a transparent heuristic, not a forecast probability. For each concept on a given day, it combines distinct source coverage and signal count, with a small capped weight for source confidence. Keep historical daily observations so a later version can score acceleration against prior days. The report shows the evidence and source names that contributed to each score.
+The score is a transparent heuristic, not a forecast probability. For each phrase on a given day, it combines distinct feed coverage and article count, with a small confidence adjustment. Keep historical daily observations so a later version can score acceleration against prior days. The report shows the feeds and article counts contributing to each phrase.
 
 ## Next increments
 

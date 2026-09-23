@@ -7,13 +7,13 @@ def render_daily(observed_on: date, scores: list[dict[str, object]]) -> str:
     lines = [f"# Fashion signal report — {observed_on.isoformat()}", "",
              "> Heuristic evidence ranking; not a forecast probability.", ""]
     if not scores:
-        lines.extend(["No observations found for this date.", ""])
+        lines.extend(["No phrases met the minimum mention count for this date and source selection.", ""])
         return "\n".join(lines)
-    lines.extend(["| Rank | Concept | Score | Sources | Observations |", "|---:|---|---:|---|---:|"])
+    lines.extend(["| Rank | Phrase | Score | Sources | Articles |", "|---:|---|---:|---|---:|"])
     for index, item in enumerate(scores, start=1):
         lines.append(
             f"| {index} | {item['canonical_label']} | {item['score']} | "
-            f"{item['sources']} | {item['observation_count']} |"
+            f"{item['sources']} | {item['article_count']} |"
         )
     lines.extend(["", "## Interpretation", "", 
                   "A higher score reflects more observations across more distinct sources, "

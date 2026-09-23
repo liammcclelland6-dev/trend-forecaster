@@ -20,3 +20,11 @@ class NormalizedSignal:
     signal: Signal
     concept_key: str
     canonical_label: str
+
+
+@dataclass(frozen=True, slots=True)
+class PhraseMention:
+    """A source phrase retained as evidence before semantic concept resolution."""
+
+    signal: Signal
+    phrase: str

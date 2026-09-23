@@ -4,7 +4,9 @@ import argparse
 from datetime import date
 
 from fashion_trends.database.repository import connect, save_observations
+from fashion_trends.models import NormalizedSignal
 from fashion_trends.processing.normalize import normalize
+from fashion_trends.processing.phrases import extract_phrases
 from fashion_trends.reporting.markdown import render_daily
 from fashion_trends.scoring.daily import score_day
 from fashion_trends.sources.rss import RSSSource
@@ -29,6 +31,11 @@ def main() -> None:
     report = subparsers.add_parser("report", help="Print a daily Markdown report")
     add_db_option(report)
     report.add_argument("--date", type=date.fromisoformat, default=date.today())
+    report.add_argument("--source", choices=["rss", "sample", "all"], default="rss")
+    report.add_argument(
+        "--min-mentions", type=int,
+        help="Minimum distinct articles per phrase (defaults to 2 for RSS, 1 otherwise)",
+    )
     args = parser.parse_args()
     db_path = args.db_after or args.db_before or "data/fashion_trends.sqlite3"
 
@@ -38,11 +45,21 @@ def main() -> None:
         elif args.command == "collect":
             source = RSSSource(args.feeds) if args.source == "rss" else SampleSource()
             signals = source.fetch(args.date)
-            normalized = [item for signal in signals for item in normalize(signal)]
+            if args.source == "rss":
+                normalized = [
+                    NormalizedSignal(mention.signal, mention.phrase, mention.phrase.title())
+                    for signal in signals
+                    for mention in extract_phrases(signal)
+                ]
+            else:
+                normalized = [item for signal in signals for item in normalize(signal)]
             count = save_observations(connection, normalized)
             print(f"Collected {len(signals)} signals; saved {count} new observations for {args.date}.")
         elif args.command == "report":
-            print(render_daily(args.date, score_day(connection, args.date)))
+            print(render_daily(
+                args.date,
+                score_day(connection, args.date, args.source, args.min_mentions),
+            ))
 
 
 if __name__ == "__main__":
