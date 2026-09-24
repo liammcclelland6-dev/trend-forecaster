@@ -129,4 +129,12 @@ def score_window(
             2,
         )
         results.append({**dict(row), "change_pct": change_pct, "score": score})
+    results.sort(
+        key=lambda item: (
+            -item["score"],
+            -item["recent_articles"],
+            -item["source_count"],
+            item["canonical_label"],
+        )
+    )
     return results

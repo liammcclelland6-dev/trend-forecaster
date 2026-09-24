@@ -25,6 +25,8 @@ _STOPWORDS = {
     "wearing", "way", "ways", "everything", "essential", "essentials", "must", "need", "needs",
     "know", "everyone", "people", "proof", "copy", "guide", "launch", "today", "why",
     "consider", "one", "work", "everything", "incredible", "moments", "became", "takes",
+    "brand", "brands", "fall", "week", "weeks", "best", "house", "september",
+    "continue", "reading",
 }
 _MAX_PHRASES_PER_ARTICLE = 80
 
