@@ -83,8 +83,8 @@ def score_window(
     recent_start = through_date - timedelta(days=window_days - 1)
     previous_end = recent_start - timedelta(days=1)
     previous_start = previous_end - timedelta(days=window_days - 1)
-    recent_predicate = "o.observed_on >= ? AND o.observed_on <= ?"
-    previous_predicate = "o.observed_on >= ? AND o.observed_on <= ?"
+    recent_predicate = "o.observed_on >= :recent_start AND o.observed_on <= :through_date"
+    previous_predicate = "o.observed_on >= :previous_start AND o.observed_on <= :previous_end"
     rows = connection.execute(
         f"""SELECT c.concept_key, c.canonical_label,
                   COUNT(DISTINCT CASE WHEN {recent_predicate}
@@ -95,30 +95,27 @@ def score_window(
                   GROUP_CONCAT(DISTINCT CASE WHEN {recent_predicate} THEN o.source END) AS sources,
                   AVG(CASE WHEN {recent_predicate} THEN o.confidence END) AS mean_confidence
            FROM observations o JOIN concepts c USING (concept_key)
-           WHERE o.observed_on >= ? AND o.observed_on <= ? AND {source_filters[source]}
+           WHERE o.observed_on >= :previous_start AND o.observed_on <= :through_date
+             AND {source_filters[source]}
            GROUP BY c.concept_key, c.canonical_label
            HAVING (
                (instr(c.concept_key, ' ') = 0 AND
                 COUNT(DISTINCT CASE WHEN {recent_predicate}
-                    THEN o.source || ':' || o.source_item_id END) >= ?)
+                    THEN o.source || ':' || o.source_item_id END) >= :single_word_min)
                OR
                (instr(c.concept_key, ' ') > 0 AND
                 COUNT(DISTINCT CASE WHEN {recent_predicate}
-                    THEN o.source || ':' || o.source_item_id END) >= ?)
+                    THEN o.source || ':' || o.source_item_id END) >= :phrase_min)
            )
            ORDER BY recent_articles DESC, source_count DESC, c.canonical_label""",
-        (
-            recent_start.isoformat(), through_date.isoformat(),
-            previous_start.isoformat(), previous_end.isoformat(),
-            recent_start.isoformat(), through_date.isoformat(),
-            recent_start.isoformat(), through_date.isoformat(),
-            recent_start.isoformat(), through_date.isoformat(),
-            previous_start.isoformat(), previous_end.isoformat(),
-            previous_start.isoformat(), through_date.isoformat(),
-            recent_start.isoformat(), through_date.isoformat(),
-            recent_start.isoformat(), through_date.isoformat(),
-            single_word_min_mentions, phrase_min_mentions,
-        ),
+        {
+            "recent_start": recent_start.isoformat(),
+            "through_date": through_date.isoformat(),
+            "previous_start": previous_start.isoformat(),
+            "previous_end": previous_end.isoformat(),
+            "single_word_min": single_word_min_mentions,
+            "phrase_min": phrase_min_mentions,
+        },
     ).fetchall()
 
     results = []
