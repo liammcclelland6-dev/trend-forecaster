@@ -26,7 +26,7 @@ src/fashion_trends/
   cli.py         Local commands to initialize, collect, and report
 ```
 
-Semantic embeddings/clustering are future extensions. The included sample source is synthetic and is only there to demonstrate the end-to-end pipeline; it does not claim those trends are occurring. The RSS adapter reads feeds configured in `feeds.toml`; each feed is collected independently so one unavailable feed does not prevent the others from running.
+RSS reports can optionally group related phrases with a local sentence-embedding model. The included sample source is synthetic and is only there to demonstrate the end-to-end pipeline; it does not claim those trends are occurring. The RSS adapter reads feeds configured in `feeds.toml`; each feed is collected independently so one unavailable feed does not prevent the others from running.
 
 ## Quick start
 
@@ -62,7 +62,23 @@ fashion-trends collect --source rss
 fashion-trends report --source rss
 ```
 
-The adapter keeps each article's cleaned headline, summary/description, publication timestamp, URL, and feed name. RSS collection extracts candidate one-to-three-word phrases from headlines and summaries and records them against the original article as evidence. Reports group identical phrases across distinct articles and feeds. By default, multiword phrases must appear in two articles, while single words must appear in four; use `--min-mentions 1` to inspect one-off candidates. This stage finds repeated wording; semantic clustering to connect related but different phrases is a later replaceable step. If a feed is unavailable or malformed, the collector prints a warning and continues with the remaining feeds. To use another feed list, pass `--feeds path\to\feeds.toml` to the RSS collect command. The synthetic source remains available with `fashion-trends collect --source sample`.
+The adapter keeps each article's cleaned headline, summary/description, publication timestamp, URL, and feed name. RSS collection extracts candidate one-to-three-word phrases from headlines and summaries and records them against the original article as evidence. Standard reports group identical phrases across distinct articles and feeds. By default, multiword phrases must appear in two articles, while single words must appear in four; use `--min-mentions 1` to inspect one-off candidates. If a feed is unavailable or malformed, the collector prints a warning and continues with the remaining feeds. To use another feed list, pass `--feeds path\to\feeds.toml` to the RSS collect command. The synthetic source remains available with `fashion-trends collect --source sample`.
+
+### Optional semantic grouping
+
+Install the optional model package from the project folder:
+
+```powershell
+python -m pip install -e ".[semantic]"
+```
+
+Then run a semantic report:
+
+```powershell
+fashion-trends report --source rss --semantic
+```
+
+The first report downloads `sentence-transformers/all-MiniLM-L6-v2` and its model files; an internet connection is required for that initial download. Later runs use the local cache and run inference on the CPU. The report displays a representative phrase and the related phrases grouped with it, so you can inspect what the model connected. Adjust the cosine similarity cutoff with `--similarity-threshold 0.58` (the default is `0.58`); a higher value makes grouping stricter. Semantic grouping is an experimental aid for connecting phrase variations: it does not invent a trend name, identify entities such as people or events, or establish that a trend is growing. Compare the article counts, feeds, and date windows before interpreting a group.
 
 Use `fashion-trends report --source sample` to view synthetic observations or `fashion-trends report --source all` to combine sample and RSS data. RSS dates come from article publication dates. Reports compare a recent window with the preceding window; set `--window-days 1` for a daily comparison or `--date YYYY-MM-DD` to choose the final date. Historical change becomes meaningful after collections have populated both windows.
 
@@ -78,5 +94,5 @@ The score is a transparent heuristic, not a forecast probability. For each phras
 
 1. Add additional approved sources behind the `SignalSource` interface.
 2. Add historical windows and momentum/acceleration scoring.
-3. Add semantic clustering with a replaceable embedding provider.
+3. Improve phrase quality and distinguish fashion concepts from names, places, and events.
 4. Add scheduling and report delivery after validating source access and desired cadence.

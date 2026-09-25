@@ -10,6 +10,9 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.optional-dependencies]
+semantic = ["sentence-transformers>=5.0"]
+
 [project.scripts]
 fashion-trends = "fashion_trends.cli:main"
 

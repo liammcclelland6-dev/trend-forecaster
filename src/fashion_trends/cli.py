@@ -8,7 +8,7 @@ from fashion_trends.models import NormalizedSignal
 from fashion_trends.processing.normalize import normalize
 from fashion_trends.processing.phrases import extract_phrases
 from fashion_trends.reporting.markdown import render_daily
-from fashion_trends.scoring.daily import score_window
+from fashion_trends.scoring.daily import score_semantic_window, score_window
 from fashion_trends.sources.rss import RSSSource
 from fashion_trends.sources.sample import SampleSource
 
@@ -34,6 +34,11 @@ def main() -> None:
     report.add_argument("--source", choices=["rss", "sample", "all"], default="rss")
     report.add_argument("--window-days", type=int, default=7)
     report.add_argument(
+        "--semantic", action="store_true",
+        help="Group related phrases with the optional local embedding model",
+    )
+    report.add_argument("--similarity-threshold", type=float, default=0.58)
+    report.add_argument(
         "--min-mentions", type=int,
         help="Minimum distinct articles per phrase (RSS defaults: 2 for phrases, 4 for single words)",
     )
@@ -57,16 +62,28 @@ def main() -> None:
             count = save_observations(connection, normalized)
             print(f"Collected {len(signals)} signals; saved {count} new observations for {args.date}.")
         elif args.command == "report":
-            print(render_daily(
-                args.date,
-                score_window(
+            if args.semantic:
+                scores = score_semantic_window(
                     connection,
                     args.date,
                     args.window_days,
                     args.source,
                     args.min_mentions,
-                ),
+                    args.similarity_threshold,
+                )
+            else:
+                scores = score_window(
+                    connection,
+                    args.date,
+                    args.window_days,
+                    args.source,
+                    args.min_mentions,
+                )
+            print(render_daily(
+                args.date,
+                scores,
                 args.window_days,
+                args.similarity_threshold if args.semantic else None,
             ))
 
 
