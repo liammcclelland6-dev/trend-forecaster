@@ -37,7 +37,7 @@ def main() -> None:
         "--semantic", action="store_true",
         help="Group related phrases with the optional local embedding model",
     )
-    report.add_argument("--similarity-threshold", type=float, default=0.58)
+    report.add_argument("--similarity-threshold", type=float, default=0.72)
     report.add_argument(
         "--min-mentions", type=int,
         help="Minimum distinct articles per phrase (RSS defaults: 2 for phrases, 4 for single words)",
