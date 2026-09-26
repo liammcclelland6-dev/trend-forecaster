@@ -13,7 +13,7 @@ def export_phrase_review(
     output_path: str | Path,
     vocabulary_path: str | Path,
     source: str = "rss",
-    limit: int = 200,
+    limit: int = 50,
 ) -> int:
     """Export frequent phrase/source pairs with evidence and blank review columns."""
     if source not in {"rss", "sample", "all"}:
@@ -52,10 +52,15 @@ def export_phrase_review(
                         AND ranked.source = counts.source
                         AND ranked.row_number = 1
             ORDER BY counts.article_count DESC, counts.latest_date DESC,
-                     c.canonical_label COLLATE NOCASE, counts.source
-            LIMIT ?""",
-        (limit,),
+                     c.canonical_label COLLATE NOCASE, counts.source""",
     ).fetchall()
+    # Focus the human sample on recurring multiword candidates. One-off and
+    # unmatched phrases remain in SQLite for later discovery and review.
+    rows = [
+        row for row in rows
+        if row["article_count"] >= 2
+        and 2 <= len(str(row["canonical_label"]).split()) <= 3
+    ][:limit]
     vocabulary = load_vocabulary(vocabulary_path)
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)

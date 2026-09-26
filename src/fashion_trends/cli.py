@@ -50,7 +50,7 @@ def main() -> None:
     review.add_argument("--source", choices=["rss", "sample", "all"], default="rss")
     review.add_argument("--output", default="data/phrase_review.csv")
     review.add_argument("--vocabulary", default="fashion_vocabulary.toml")
-    review.add_argument("--limit", type=int, default=200)
+    review.add_argument("--limit", type=int, default=50)
     args = parser.parse_args()
     db_path = args.db_after or args.db_before or "data/fashion_trends.sqlite3"
 

@@ -27,6 +27,13 @@ _STOPWORDS = {
     "consider", "one", "work", "everything", "incredible", "moments", "became", "takes",
     "brand", "brands", "fall", "week", "weeks", "best", "house", "september",
     "continue", "reading",
+    "comes", "next", "cool", "courtesy", "create", "cue", "anyone", "anything",
+    "second", "global", "word", "stories", "behind", "entirely", "terms", "ever",
+    "every", "occasion", "said", "says", "think", "film", "case", "asked", "share",
+    "favorite", "favourite", "probably", "described", "ready", "first", "both", "one",
+    "really", "quite", "perhaps", "thing", "things", "someone", "something", "makes",
+    "made", "looking", "looks", "like", "newly", "much", "many", "around", "back",
+    "home", "world", "time", "years", "year", "day", "days", "month", "months",
 }
 _MAX_PHRASES_PER_ARTICLE = 80
 
@@ -36,15 +43,25 @@ def _words(text: str) -> list[str]:
     normalized = "".join(char for char in normalized if not unicodedata.combining(char))
     return [
         word for word in re.findall(r"[a-z0-9]+", normalized)
-        if not word.isdigit() and word not in _STOPWORDS and len(word) > 2
+        if not word.isdigit()
     ]
 
 
-def _ngrams(words: list[str]) -> Counter[str]:
+def _ngrams(words: list[str], include_singles: bool = False) -> Counter[str]:
     counts: Counter[str] = Counter()
-    for size in (1, 2, 3):
+    for size in ((1, 2, 3) if include_singles else (2, 3)):
         for index in range(len(words) - size + 1):
-            counts[" ".join(words[index:index + size])] += 1
+            phrase_words = words[index:index + size]
+            if any(word in _STOPWORDS for word in phrase_words):
+                continue
+            counts[" ".join(phrase_words)] += 1
+    return counts
+
+
+def _text_ngrams(text: str, include_singles: bool = False) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    for segment in re.split(r"[\r\n.!?;:,—–]+", text):
+        counts.update(_ngrams(_words(segment), include_singles))
     return counts
 
 
@@ -61,10 +78,10 @@ def _article_text(signal: Signal) -> tuple[str, str]:
 def extract_phrases(signal: Signal) -> list[PhraseMention]:
     """Return article phrases as independent mentions, preserving the source evidence."""
     title, summary = _article_text(signal)
-    title_words = _words(title)
-    summary_words = _words(summary[:4000])
-    title_counts = _ngrams(title_words)
-    all_counts = title_counts + _ngrams(summary_words)
+    # Single-token candidates are kept only from headlines, where they are more
+    # likely to be a named style or concept than incidental summary language.
+    title_counts = _text_ngrams(title, include_singles=True)
+    all_counts = title_counts + _text_ngrams(summary[:4000])
     if not all_counts:
         return []
 

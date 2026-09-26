@@ -86,13 +86,14 @@ Use `fashion-trends report --source sample` to view synthetic observations or `f
 
 `fashion_vocabulary.toml` is an editable starter vocabulary for garments, styles, materials, details, colors, and silhouettes. It only suggests a category during review; a phrase with no vocabulary match is still included. The list is intentionally small and should grow from phrases found in the feeds.
 
-After collecting RSS items, export up to 200 frequently observed phrase/source pairs:
+After pulling phrase-extraction updates, recollect RSS items so the database uses the cleaner phrase candidates, then export up to 50 recurring multiword phrase/source pairs:
 
 ```powershell
-fashion-trends review-export --source rss --limit 200 --output data/phrase_review.csv
+fashion-trends collect --source rss
+fashion-trends review-export --source rss --limit 50 --output data/phrase_review.csv
 ```
 
-Open `data/phrase_review.csv` in a spreadsheet. It includes the phrase, suggested category and matched seed terms, source, article count, latest date, title, a summary excerpt, and URL. Fill in `review_category`, `reviewed_name`, `related_terms`, and `review_notes`; leave unfamiliar phrases in the file and mark them unsure or generic as appropriate. Add useful new terms and aliases to `fashion_vocabulary.toml`, then rerun the export to see the updated suggestions. Use `--vocabulary path\to\file.toml` to point to another vocabulary file. This review data will help us evaluate extraction and filtering before considering model fine-tuning.
+The export sample focuses on recurring two- and three-word phrases; one-off and unmatched phrases remain in SQLite and are not discarded. It includes the phrase, suggested category and matched seed terms, source, article count, latest date, title, a summary excerpt, and URL. Fill in `review_category`, `reviewed_name`, `related_terms`, and `review_notes`; mark unfamiliar phrases unsure or generic as appropriate. Add useful new terms and aliases to `fashion_vocabulary.toml`, then rerun the export to see the updated suggestions. Use `--vocabulary path\to\file.toml` to point to another vocabulary file. This review data will help us evaluate extraction and filtering before considering model fine-tuning.
 
 Without installing the command, run `python -m fashion_trends.cli ...` with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "src"`).
 
