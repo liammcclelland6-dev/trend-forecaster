@@ -82,6 +82,18 @@ The first report downloads `sentence-transformers/all-MiniLM-L6-v2` and its mode
 
 Use `fashion-trends report --source sample` to view synthetic observations or `fashion-trends report --source all` to combine sample and RSS data. RSS dates come from article publication dates. Reports compare a recent window with the preceding window; set `--window-days 1` for a daily comparison or `--date YYYY-MM-DD` to choose the final date. Historical change becomes meaningful after collections have populated both windows.
 
+## Review phrase candidates
+
+`fashion_vocabulary.toml` is an editable starter vocabulary for garments, styles, materials, details, colors, and silhouettes. It only suggests a category during review; a phrase with no vocabulary match is still included. The list is intentionally small and should grow from phrases found in the feeds.
+
+After collecting RSS items, export up to 200 frequently observed phrase/source pairs:
+
+```powershell
+fashion-trends review-export --source rss --limit 200 --output data/phrase_review.csv
+```
+
+Open `data/phrase_review.csv` in a spreadsheet. It includes the phrase, suggested category and matched seed terms, source, article count, latest date, title, a summary excerpt, and URL. Fill in `review_category`, `reviewed_name`, `related_terms`, and `review_notes`; leave unfamiliar phrases in the file and mark them unsure or generic as appropriate. Add useful new terms and aliases to `fashion_vocabulary.toml`, then rerun the export to see the updated suggestions. Use `--vocabulary path\to\file.toml` to point to another vocabulary file. This review data will help us evaluate extraction and filtering before considering model fine-tuning.
+
 Without installing the command, run `python -m fashion_trends.cli ...` with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "src"`).
 
 By default, the database is `data/fashion_trends.sqlite3`. Pass `--db path\to\file.sqlite3` before or after any command to use a different location (for example, `fashion-trends --db custom.sqlite3 report` or `fashion-trends report --db custom.sqlite3`). Collection is idempotent for a given source, source item, concept, and observation date, so rerunning a source does not duplicate its observations.
@@ -94,5 +106,5 @@ The score is a transparent heuristic, not a forecast probability. For each phras
 
 1. Add additional approved sources behind the `SignalSource` interface.
 2. Add historical windows and momentum/acceleration scoring.
-3. Improve phrase quality and distinguish fashion concepts from names, places, and events.
+3. Use reviewed phrase candidates to improve phrase extraction and distinguish fashion concepts from names, places, and events.
 4. Add scheduling and report delivery after validating source access and desired cadence.

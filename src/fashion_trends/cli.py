@@ -8,6 +8,7 @@ from fashion_trends.models import NormalizedSignal
 from fashion_trends.processing.normalize import normalize
 from fashion_trends.processing.phrases import extract_phrases
 from fashion_trends.reporting.markdown import render_daily
+from fashion_trends.reporting.review import export_phrase_review
 from fashion_trends.scoring.daily import score_semantic_window, score_window
 from fashion_trends.sources.rss import RSSSource
 from fashion_trends.sources.sample import SampleSource
@@ -42,6 +43,14 @@ def main() -> None:
         "--min-mentions", type=int,
         help="Minimum distinct articles per phrase (RSS defaults: 2 for phrases, 4 for single words)",
     )
+    review = subparsers.add_parser(
+        "review-export", help="Export phrase candidates to CSV for human review"
+    )
+    add_db_option(review)
+    review.add_argument("--source", choices=["rss", "sample", "all"], default="rss")
+    review.add_argument("--output", default="data/phrase_review.csv")
+    review.add_argument("--vocabulary", default="fashion_vocabulary.toml")
+    review.add_argument("--limit", type=int, default=200)
     args = parser.parse_args()
     db_path = args.db_after or args.db_before or "data/fashion_trends.sqlite3"
 
@@ -85,6 +94,15 @@ def main() -> None:
                 args.window_days,
                 args.similarity_threshold if args.semantic else None,
             ))
+        elif args.command == "review-export":
+            count = export_phrase_review(
+                connection,
+                args.output,
+                args.vocabulary,
+                args.source,
+                args.limit,
+            )
+            print(f"Exported {count} phrase candidates to {args.output}.")
 
 
 if __name__ == "__main__":

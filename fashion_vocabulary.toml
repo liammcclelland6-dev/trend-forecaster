@@ -1,0 +1,107 @@
+# Editable seed terms used only to suggest categories in phrase-review exports.
+# Unknown phrases are still exported for review.
+
+[[terms]]
+category = "garment"
+canonical = "boot"
+aliases = ["boots", "ankle boots", "cowboy boots", "western boots"]
+
+[[terms]]
+category = "garment"
+canonical = "flat shoe"
+aliases = ["flats", "ballet flat", "ballet flats", "ballet sneaker", "ballet sneakers"]
+
+[[terms]]
+category = "garment"
+canonical = "trouser"
+aliases = ["trousers", "pants", "jeans", "hot pants", "wide-leg trousers"]
+
+[[terms]]
+category = "garment"
+canonical = "coat"
+aliases = ["coats", "trench coat", "trench coats", "jacket", "jackets"]
+
+[[terms]]
+category = "garment"
+canonical = "skirt"
+aliases = ["skirts", "dress", "dresses", "suit", "suits", "belt", "belts"]
+
+[[terms]]
+category = "garment"
+canonical = "bag"
+aliases = ["bags", "handbag", "handbags", "tote", "tote bag"]
+
+[[terms]]
+category = "style"
+canonical = "western"
+aliases = ["cowboy", "americana", "rodeo", "western wear", "western style"]
+
+[[terms]]
+category = "style"
+canonical = "ballet-inspired"
+aliases = ["balletcore", "ballet inspired", "ballet-inspired", "ballet flat", "ballet flats"]
+
+[[terms]]
+category = "style"
+canonical = "preppy"
+aliases = ["preppy", "prep", "collegiate", "ivy style"]
+
+[[terms]]
+category = "style"
+canonical = "bohemian"
+aliases = ["boho", "bohemian", "boho chic"]
+
+[[terms]]
+category = "material"
+canonical = "denim"
+aliases = ["jean", "jeans", "denim"]
+
+[[terms]]
+category = "material"
+canonical = "leather"
+aliases = ["leather", "suede", "faux leather", "patent leather"]
+
+[[terms]]
+category = "material"
+canonical = "silk"
+aliases = ["silk", "satin", "cashmere", "wool", "linen", "velvet"]
+
+[[terms]]
+category = "detail"
+canonical = "rhinestone"
+aliases = ["rhinestones", "rhinestone", "crystal embellishment", "sparkle"]
+
+[[terms]]
+category = "detail"
+canonical = "fringe"
+aliases = ["fringe", "fringed", "tassel", "tassels", "pearl snap", "pearl snaps"]
+
+[[terms]]
+category = "detail"
+canonical = "embroidery"
+aliases = ["embroidered", "embroidery", "lace", "sequins", "sequin", "beading"]
+
+[[terms]]
+category = "color"
+canonical = "red"
+aliases = ["red", "burgundy", "scarlet", "crimson"]
+
+[[terms]]
+category = "color"
+canonical = "blue"
+aliases = ["blue", "navy", "cobalt", "denim blue"]
+
+[[terms]]
+category = "color"
+canonical = "gold"
+aliases = ["gold", "golden", "silver", "metallic", "butter yellow"]
+
+[[terms]]
+category = "silhouette"
+canonical = "oversized"
+aliases = ["oversized", "relaxed fit", "boxy", "slouchy"]
+
+[[terms]]
+category = "silhouette"
+canonical = "wide leg"
+aliases = ["wide leg", "wide-leg", "flared", "flare", "slim fit", "cropped"]
